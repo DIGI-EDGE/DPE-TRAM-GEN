@@ -24,19 +24,19 @@ Base* AddElementToArray(Base* array, byte size, Base element) {
 void Header_init(Header *header, byte* devAddVal, byte* devEuiVal, byte* appEuiVal, byte devAddType, byte devEuiType, byte appEuiType) {
     // DevADD Field    
     header->DevADD.type = devAddType;
-    header->DevADD.size = CalculateSize(devAddVal);
+    header->DevADD.size = 0x04;
     header->DevADD.value = new byte[header->DevADD.size];
     memcpy(header->DevADD.value, devAddVal, header->DevADD.size);
 
     // DevEUI Field
     header->DevEUI.type = devEuiType;
-    header->DevEUI.size = CalculateSize(devEuiVal);
+    header->DevEUI.size = 0x08;
     header->DevEUI.value = new byte[header->DevEUI.size];
     memcpy(header->DevEUI.value, devEuiVal, header->DevEUI.size);
 
     // AppEUI Field
     header->AppEUI.type = appEuiType;
-    header->AppEUI.size = CalculateSize(appEuiVal);
+    header->AppEUI.size = 0x08;
     header->AppEUI.value = new byte[header->AppEUI.size];
     memcpy(header->AppEUI.value, appEuiVal, header->AppEUI.size);
     
@@ -46,7 +46,7 @@ void Header_init(Header *header, byte* devAddVal, byte* devEuiVal, byte* appEuiV
 
 byte CalculateSize(const byte* data) {
     byte size = 0;
-    while (data[size] != '\0') {
+    while (data[size] != 0) {
         size++;
     }
     return size;
@@ -55,10 +55,10 @@ byte CalculateSize(const byte* data) {
 
 byte counter = 0;
 
-void AppendInHeader(Header* header, byte type, byte* value){
+void AppendInHeader(Header* header, byte type, byte* value, byte size){
     Base temp;
     temp.type = type;
-    temp.size = CalculateSize(value);
+    temp.size = size;
     temp.value = new byte[temp.size];
     memcpy(temp.value, value, temp.size);
     header->Info = AddElementToArray(header->Info, counter, temp);
@@ -73,16 +73,15 @@ byte* CaclulateHeaderSize(const Header header){
     return size;
 }
 
-byte* CalculatePayloadSize(const byte* payload){
-    uint16_t size_ = CalculateSize(payload);
+byte* CalculatePayloadSize(const byte* payload , uint16_t size_){
     byte* size = new byte[2];
     size[0] = size_ & 0xFF;         // Extract the least significant byte
     size[1] = (size_ >> 8) & 0xFF; // Extract the most significant byte
     return size;
 }
 
-byte calculateCRC8(const byte *payload) {
-    byte dataSize = CalculateSize(payload);
+byte calculateCRC8(const byte *payload, uint16_t size) {
+    uint16_t dataSize = size;
     if (payload == nullptr)
     {
         // handle null input
@@ -120,7 +119,7 @@ uint16_t byteArrayToUint16(const byte* byteArray) {
 
 uint16_t frame_size(float payload_, Header header) {
     byte* payload = floatToByteArray(payload_);
-    byte* PayloadSize = CalculatePayloadSize(payload);
+    byte* PayloadSize = CalculatePayloadSize(payload, 4);
     uint16_t PSize = byteArrayToUint16(PayloadSize);
     return 5 + header.size + PSize + 1 + 2;
 }
@@ -130,7 +129,7 @@ byte* floatToByteArray(float number)
     uint32_t floatAsInt;
     memcpy(&floatAsInt, &number, sizeof(floatAsInt));
 
-    byte* byteArray = new byte[sizeof(floatAsInt)+1];
+    byte* byteArray = new byte[sizeof(floatAsInt)];
     memcpy(byteArray, &floatAsInt, sizeof(floatAsInt));
     // Swap the byte order
     for (size_t i = 0, j =  sizeof(floatAsInt) - 1; i < j; ++i, --j)
@@ -139,7 +138,6 @@ byte* floatToByteArray(float number)
         byteArray[i] = byteArray[j];
         byteArray[j] = temp;
     }
-    byteArray[sizeof(floatAsInt)] = '\0';
 
     return byteArray;
 }
@@ -152,7 +150,7 @@ byte* SendPayload(float payload_, const Header& header) {
     byte* HeaderSize = CaclulateHeaderSize(header);
     byte HS_MSB = HeaderSize[1];
     byte HS_LSB = HeaderSize[0];
-    byte* PayloadSize = CalculatePayloadSize(payload);
+    byte* PayloadSize = CalculatePayloadSize(payload, 4);
     byte DS_MSB = PayloadSize[1];
     byte DS_LSB = PayloadSize[0];
     byte DevAdd_type = header.DevADD.type;
@@ -186,7 +184,7 @@ byte* SendPayload(float payload_, const Header& header) {
         }
         acc+= header.Info[i].size;
     }
-    byte CRC = calculateCRC8(payload);
+    byte CRC = calculateCRC8(payload, 4);
     byte EndOfFrame_MSB = EOF_MSB;
     byte EndOfFrame_LSB = EOF_LSB;
 

@@ -51,9 +51,9 @@ void Header_init(Header *header, byte* devAddVal, byte* devEuiVal,byte* appEuiVa
                  byte appEuiType = APP_EUI_TYPE);
 byte* SendPayload(float payload_, const Header& header) ;
 byte* CaclulateHeaderSize(const Header header);
-byte* CalculatePayloadSize(const byte* payload);
-void AppendInHeader(Header* header, byte type, byte* value);
-byte calculateCRC8(const byte *data);
+byte* CalculatePayloadSize(const byte* payload, uint16_t size_);
+void AppendInHeader(Header* header, byte type, byte* value, byte size);
+byte calculateCRC8(const byte *data, uint16_t size);
 byte CalculateSize(const byte* data);
 uint16_t frame_size(float payload_, Header header);
 byte* floatToByteArray(float number);
