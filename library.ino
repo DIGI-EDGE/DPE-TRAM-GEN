@@ -8,9 +8,9 @@ void setup() {
   Serial.begin(9600);   
   // Creat a Header
   Header header;
-  byte dev_add[] = {0xA2, 0xB2, 0xC2, 0xD2};
-  byte dev_eui[] = {0xA2, 0xB3, 0xC4, 0xD5, 0xE6, 0xF7, 0xA8, 0xB9};
-  byte app_eui[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80};
+  byte dev_add[] = {0xA2, 0xB2, 0xC2, 0xD2, '\0'};
+  byte dev_eui[] = {0xA2, 0xB3, 0xC4, 0xD5, 0xE6, 0xF7, 0xA8, 0xB9, '\0'};
+  byte app_eui[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, '\0'};
 
   //Initiate header with the following fields DevADD, DevEUI and AppEUI
   Header_init(&header, dev_add, dev_eui, app_eui);
@@ -36,8 +36,7 @@ void setup() {
    AppendInHeader(&header, battery_type, battery_value);
 
   //then Send the Payload 
-  float data = 3.14;
-
+   float data = 12.10f;
    uint16_t n  = frame_size(data, header); 
    byte * f = SendPayload(data, header);
    for(int i = 0; i<n;i++){

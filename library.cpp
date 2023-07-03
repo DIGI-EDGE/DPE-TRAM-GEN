@@ -130,19 +130,20 @@ byte* floatToByteArray(float number)
     uint32_t floatAsInt;
     memcpy(&floatAsInt, &number, sizeof(floatAsInt));
 
-    byte* byteArray = new byte[sizeof(floatAsInt)];
+    byte* byteArray = new byte[sizeof(floatAsInt)+1];
     memcpy(byteArray, &floatAsInt, sizeof(floatAsInt));
-
     // Swap the byte order
-    for (size_t i = 0, j = sizeof(floatAsInt) - 1; i < j; ++i, --j)
+    for (size_t i = 0, j =  sizeof(floatAsInt) - 1; i < j; ++i, --j)
     {
         byte temp = byteArray[i];
         byteArray[i] = byteArray[j];
         byteArray[j] = temp;
     }
+    byteArray[sizeof(floatAsInt)] = '\0';
 
     return byteArray;
 }
+
 byte* SendPayload(float payload_, const Header& header) {
     byte* payload = floatToByteArray(payload_);
     uint16_t FrameSize = frame_size(payload_, header);
